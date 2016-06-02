@@ -88,6 +88,11 @@ int startingBlock; // notes starting block position 0 or 1
 
 /******************************* setup *************************************/
 void setup() {
+
+   /* whatever function that will essentially output the starting position should go here so that the variable declaration in the next two lines of code works correctly */
+
+  currentPosX = startingPosX; // initializes the starting x-position of the robot for future use in the code (NEW)
+  currentPosY = startingPosY; // initializes the starting y-position of the robot for future in in the code (NEW)
   
   pinMode (buttPin,INPUT_PULLUP); //reads 5V until button is pressed again, note: logic is inverted
   while(digitalRead(buttPin));
@@ -185,6 +190,7 @@ void loop() {
 
 
   /* Tell robot which starting block it is on (currently just x-direction)*/
+  
   /*startingBlock = analogRead(PotPin) / 513;
   Serial.print ("Starting Block:"); Serial.print("\t"); Serial.println(startingBlock);
 
@@ -275,7 +281,10 @@ void estimate(){
   distanceX += cos(theta) * deltaSw; // updates distance traveled in x-direction since last reed trigger
   distanceY += sin(theta) * deltaSw; // updates distance travled in y-direction since last reed trigger
   distance += deltaSw; // update distance traveled since last reed trigger
-
+  currentPosX += distanceX; // updates the new current x-position of the robot (NEW)
+  currentPosY += distanceY; // updates the new current y-position of the robot (NEW)
+  
+  
   float distanceCM = (distance * 2.54); //convert distance traveled from inches to cm
   //Serial.print("Distance Traveled (in cm):"); Serial.print("\t"); Serial.println(distanceCM);
 }
