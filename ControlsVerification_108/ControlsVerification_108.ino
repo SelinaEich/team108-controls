@@ -64,6 +64,23 @@ float backWheelRadius = 1.25; // (in inches) roller blade back wheel radius
 float distanceX = 0; // (in inches) distance traveled in the x-direction
 float distanceY = 0; // (in inches) distance traveled in the y-direction
 float distance = 0; // (in inches) distance traveled
+float currentPosX; // current x-position (NEW)
+float currentPosY; // current y-position (NEW)
+float startingPosX; // starting x-position (will vary depending on selected starting position) (NEW)
+float startingPosY; // starting y-position (will vary depending on selected starting position) (NEW)
+
+
+/*Error Variables*/
+
+float error_p_dist; // distance from current position to target position (NEW)
+float p_angle; // direction from robot to target (NEW)
+float alpha_p; // error between orientation (theta) and error angle (p_angle) (NEW)
+
+
+float lead_angle; // direction of lead target (NEW)
+float alpha_L; // error between orientation (theta) and lead_angle (NEW)
+float error_theta; // error between estimated and desired orientation (NEW)
+float error_speed; // error between estimated and desired speed (NEW)
 
 /*Potentiometer Variables*/
 int startingBlock; // notes starting block position 0 or 1
