@@ -20,7 +20,7 @@ Servo myServo;                      // compass servo
 int   magX, magY, magZ;             // triple axis data
 float phi;                        // magnetometer angle in PCB plane (around Z-axis) in degrees, Servo.write(theta) turns robot towards magnetic north, theta is the angle/direction that the robot is currently pointing
 /* this variable phi used to be theta, I changed it to make the code less confusing for implementing the controller */
-float thetaOffset = -139;             // a value of -139 makes 0 degrees represent straight down the center of the channel
+float thetaOffset = -139;             // a value of -191 makes 0 degrees represent North, UPDATE THIS!!!!
 /*update thetaOffset*/
 
 float servoBearing;          // originally as servoBearing; has been changed to phi_desired to represent the desired ORIENTATION of the robot
