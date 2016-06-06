@@ -327,14 +327,16 @@ float fix(float x) {
 
 /************* Controller (TO BE CHECKED) **********************/
 void steering(){
-  if((currentPosY > -33) && (currentPosY < 33)) // determines whether or not the robot is in the channel to run the channel control law
+  if((currentPosY > -33) && (currentPosY < 33)) {// determines whether or not the robot is in the channel to run the channel control law
   p_desiredX = currentPosX + target_lead;
   p_desiredY = 0;
-  phi_desired = 0; // phi_desired was originally servoBearing; this variable refers to the desired orientation of the robot
-  else // the statements following this else should have the robot continue to move forwards
+  phi_desired = 0; 
+  }// phi_desired was originally servoBearing; this variable refers to the desired orientation of the robot
+  else {// the statements following this else should have the robot continue to move forwards
   p_desiredX = currentPosX;
   p_desiredY = 0;
   phi_desired = 90;
+  }
   end
 
   error_pX = currentPosX - p_desiredX;
@@ -350,4 +352,78 @@ void steering(){
 
   myServo.write(90+theta_target);
 }
+
+/************** Potentiometer/Starting Position Base Code *************/
+void start() {
+  if (/*Insert condition for button being ON referring to starting positions in the A Block and B Block*/){ 
+    startingBlock = analogRead(PotPin) / 513; 
+    if (startingBlock == 0){ // Position A1
+      startingPosX = -99;
+      startingPosY = 154;
+    }
+    else if (startingBlock == 1){ // Position A2
+      startingPosX = -121;
+      startingPosY = 132;
+    }
+    else if (startingBlock == 2){ // Position A3
+      startingPosX = -99;
+      startingPosY = 110;
+    }
+    else if (startingBlock == 3){ // Position A4
+      startingPosX = -77;
+      startingPosY = 132;
+    }
+    else if (startingBlock == 4){ // Position B1
+      startingPosX = -33;
+      startingPosY = 154;
+    }
+    else if (startingBlock == 5){ // Position B2
+      startingPosX = -55;
+      startingPosY = 132;
+    }
+    else if (startingBlock == 6){ // Position B3
+      startingPosX = -33;
+      startingPosY = 110;
+    }
+    else if (startingBlock == 7){ // Position B4
+      startingPosX = -11;
+      startingPosY = 132;
+    }
+  }
+  else if (/*Insert condition for button being OFF referring to starting positions on the C Block and D Block*/){
+    startingBlock = analogRead(PotPin) / 513;
+    if (startingBlock == 0){ // Position C1
+      startingPosX = -99;
+      startingPosY = -110;
+    }
+    else if (startingBlock == 1){ // Position C2
+      startingPosX = -121;
+      startingPosY = -132;
+    }
+    else if (startingBlock == 2){ // Position C3
+      startingPosX = -99;
+      startingPosY = -154;
+    }
+    else if (startingBlock == 3){ // Position C4
+      startingPosX = -77;
+      startingPosY = -132;
+    }
+    else if (startingBlock == 4){ // Position D1
+      startingPosX = -33;
+      startingPosY = -110;
+    }
+    else if (startingBlock == 5){ // Position D2
+      startingPosX = -55;
+      startingPosY = -132;
+    }
+    else if (startingBlock == 6){ // Position D3
+      startingPosX = -33;
+      startingPosY = -154;
+    }
+    else if (startingBlock == 7){ // Position D4
+      startingPosX = -11;
+      startingPosY = -132;
+    }
+  }
+  }
 
