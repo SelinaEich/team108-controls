@@ -186,8 +186,59 @@ void loop() {
   /* Update the sensor readings and solenoid state */
   updateMag();
   updateSolenoid(); 
-  
-/* Sweeps the servo to check that it functions */
+  updateServo();
+}
+
+/******************** update magnetometer function ************************/
+void updateMag(void) {
+  /* Tell the HMC5883L where to begin reading data */
+  Wire.beginTransmission(address);
+  Wire.write(0x03); //select register 3, X MSB register
+  Wire.endTransmission();
+  /* Read data from each axis, 2 registers per axis */
+  Wire.requestFrom(address, 6);
+  if (6 <= Wire.available()) {
+    magX = Wire.read() << 8; //X msbs // Bitshift
+    magX |= Wire.read();    //X lsb
+    magZ = Wire.read() << 8; //Z msb
+    magZ |= Wire.read();    //Z lsb
+    magY = Wire.read() << 8; //Y msb
+    magY |= Wire.read();    //Y lsb
+  }
+
+  /* print for troubleshooting */
+    //Serial.print("X:"); Serial.print("\t"); Serial.print(magX); Serial.print("\t");
+    //Serial.print("Y:"); Serial.print("\t"); Serial.print(magY); Serial.print("\t");
+    //Serial.print("Z:"); Serial.print("\t"); Serial.print(magZ); Serial.print("\t");*/
+
+    /* Calculate magnetometer angle */
+  theta = 180. / pi * atan2(magY, magX) + thetaOffset; // convert to degrees, apply offset
+  theta = modulo(theta, 360.); // ensure that theta is between 0 and 360 degrees
+
+  Serial.print("theta:"); Serial.print("\t"); Serial.println(theta);
+}
+
+/************************* Update Solenoid *********************************/
+void updateSolenoid(){ 
+    if ((currentTime - lastTimeSolenoid) >= solenoidInterval && solenoidState == HIGH) {
+      solenoidState = LOW;
+      digitalWrite(SolenoidPin, solenoidState); // Opens the solenoid valve
+      lastTimeSolenoid = currentTime;
+      //Serial.println("SolenoidOff");
+    } 
+    if ((currentTime - lastTimeSolenoid) >= solenoidInterval && solenoidState == LOW) {
+      solenoidState = HIGH; 
+      digitalWrite(SolenoidPin, solenoidState); // Closes the solenoid valve
+      lastTimeSolenoid = currentTime;
+      //Serial.println("SolenoidOn");
+    }
+    //Serial.println("Solenoid");
+    //Serial.print("solenoidInterval:"); Serial.print("\t"); Serial.println(solenoidInterval);
+}
+
+/************************** Update Servo ***********************************/
+void updateServo() {
+  /* Sweeps the servo to check that it functions */
  /* Serial.print("currentTime:");   Serial.print("\t"); Serial.println(currentTime);
   Serial.print("lastTimeServo:"); Serial.print("\t"); Serial.println(lastTimeServo);
   Serial.print("servoInterval:"); Serial.print("\t"); Serial.println(servoInterval);
@@ -247,51 +298,6 @@ void loop() {
   // Serial.print("Servo Angle:"); Serial.print("\t"); Serial.println(servoAngle);
   //Serial.print("Servo Position:"); Serial.print("\t"); Serial.println(servoPosition);
   //Serial.print("Solenoid State:"); Serial.print("\t"); Serial.println(solenoidState);
-}
-
-/******************** update magnetometer function ************************/
-void updateMag(void) {
-  /* Tell the HMC5883L where to begin reading data */
-  Wire.beginTransmission(address);
-  Wire.write(0x03); //select register 3, X MSB register
-  Wire.endTransmission();
-  /* Read data from each axis, 2 registers per axis */
-  Wire.requestFrom(address, 6);
-  if (6 <= Wire.available()) {
-    magX = Wire.read() << 8; //X msbs // Bitshift
-    magX |= Wire.read();    //X lsb
-    magZ = Wire.read() << 8; //Z msb
-    magZ |= Wire.read();    //Z lsb
-    magY = Wire.read() << 8; //Y msb
-    magY |= Wire.read();    //Y lsb
-  }
-
-  /* print for troubleshooting */
-    //Serial.print("X:"); Serial.print("\t"); Serial.print(magX); Serial.print("\t");
-    //Serial.print("Y:"); Serial.print("\t"); Serial.print(magY); Serial.print("\t");
-    //Serial.print("Z:"); Serial.print("\t"); Serial.print(magZ); Serial.print("\t");*/
-
-    /* Calculate magnetometer angle */
-  theta = 180. / pi * atan2(magY, magX) + thetaOffset; // convert to degrees, apply offset
-  theta = modulo(theta, 360.); // ensure that theta is between 0 and 360 degrees
-}
-
-/************************* Update Solenoid *********************************/
-void updateSolenoid(){ 
-    if ((currentTime - lastTimeSolenoid) >= solenoidInterval && solenoidState == HIGH) {
-      solenoidState = LOW;
-      digitalWrite(SolenoidPin, solenoidState); // Opens the solenoid valve
-      lastTimeSolenoid = currentTime;
-      //Serial.println("SolenoidOff");
-    } 
-    if ((currentTime - lastTimeSolenoid) >= solenoidInterval && solenoidState == LOW) {
-      solenoidState = HIGH; 
-      digitalWrite(SolenoidPin, solenoidState); // Closes the solenoid valve
-      lastTimeSolenoid = currentTime;
-      //Serial.println("SolenoidOn");
-    }
-    //Serial.println("Solenoid");
-    //Serial.print("solenoidInterval:"); Serial.print("\t"); Serial.println(solenoidInterval);
 }
 
 /************************* position estimate/distance traveled update *************************************/
@@ -426,4 +432,7 @@ void start() {
     }
   }
   }
+
+
+  
 
