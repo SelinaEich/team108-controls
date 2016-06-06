@@ -58,7 +58,7 @@ long debounceTime = 15;
 const float pi = 3.14159;
 float a = 5.5; // (in inches) distance between rear wheels
 float b = 5.5; // (in inches) distance between rear axle and front wheel 
-float backWheelRadius = 1.25; // (in inches) roller blade back wheel radius
+float backWheelRadius = 1.5748; // (in inches) roller blade back wheel radius
 
 /*Position Variables*/
 float distanceX = 0; // (in inches) distance traveled in the x-direction
