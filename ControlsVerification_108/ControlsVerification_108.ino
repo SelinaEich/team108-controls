@@ -105,10 +105,6 @@ int buttonState = 0;
 
 /******************************* setup *************************************/
 void setup() {
-
-  pinMode(startPin,INPUT_PULLUP);
-  buttonState = digitalRead(startPin);
-  Serial.print("buttonState");
   
   /* whatever function that will essentially output the starting position should go here so that the variable declaration in the next two lines of code works correctly */
   /* These comments can be undone and made usable to test the controller law
@@ -127,6 +123,14 @@ void setup() {
   originY = 0;
   finish_lineX = 528;
   finish_lineY = 0;
+
+    /* Initialize Serial and I2C communications */
+  Serial.begin(9600);
+  Wire.begin();
+
+  pinMode(startPin,INPUT_PULLUP);
+  buttonState = digitalRead(startPin);
+  Serial.print("buttonState:"); Serial.print("\t"); Serial.println(buttonState);
   
   pinMode (buttPin,INPUT_PULLUP); //reads 5V until button is pressed again, note: logic is inverted
   while(digitalRead(buttPin));
@@ -139,9 +143,7 @@ void setup() {
   
   pinMode(SolenoidPin, OUTPUT);
 
-  /* Initialize Serial and I2C communications */
-  Serial.begin(9600);
-  Wire.begin();
+
   /* Put the HMC5883 IC into the correct operating mode */
   Wire.beginTransmission(address);  //open communication with HMC5883
   Wire.write(0x02);                 //select mode register
@@ -151,6 +153,7 @@ void setup() {
   pinMode (Reed,INPUT_PULLUP); //reads 5V until switch turns off, "unfloat" the switch when open for a reliable reading, note: logic is inverted
   attachInterrupt(digitalPinToInterrupt(Switch),debounceInterrupt,FALLING);
   pinMode(PotPin, INPUT);
+
 }
 /************************* position estimate/distance traveled update *************************************/
 void estimate(){
