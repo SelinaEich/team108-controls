@@ -22,7 +22,7 @@ float theta;                        // magnetometer angle in PCB plane (around Z
 float thetaOffset = -191;             // a value of -191 makes 0 degrees represent North, UPDATE THIS!!!!
 /*update thetaOffset*/
 
-float servoBearing = 135;          // where you want the robot to point
+float servoBearing = 90;          // where you want the robot to point
 float servoAngle;                 // desired change in servo angle
 
 /*Servo Variables*/
@@ -68,15 +68,20 @@ float currentPosX; // current x-position (NEW)
 float currentPosY; // current y-position (NEW)
 float startingPosX; // starting x-position (will vary depending on selected starting position) (NEW)
 float startingPosY; // starting y-position (will vary depending on selected starting position) (NEW)
-
+float posVect[1]; // vector position of robot (NEW)
+float originX; // x-position of origin, to be set at the center of the channel gate (NEW)
+float originY; // y-position of origin, to be set at the center of the channel gate (NEW)
+float finish_lineX; // x-position of finish line, to be set at the end of the channel (NEW)
+float finish_lineY; // y-position of finish line, to be set at the end of the channel (NEW)
 
 /*Error Variables*/
 
+float error_p[1]; // position error in vector form (NEW)
 float error_p_dist; // distance from current position to target position (NEW)
 float p_angle; // direction from robot to target (NEW)
 float alpha_p; // error between orientation (theta) and error angle (p_angle) (NEW)
-
-
+float unit_theta[1]; // unit vector representing orientation of robot (NEW)
+float p_lead[1]; // position vector of lead target (NEW)
 float lead_angle; // direction of lead target (NEW)
 float alpha_L; // error between orientation (theta) and lead_angle (NEW)
 float error_theta; // error between estimated and desired orientation (NEW)
@@ -94,6 +99,11 @@ void setup() {
   currentPosX = startingPosX; // initializes the starting x-position of the robot for future use in the code (NEW)
   currentPosY = startingPosY; // initializes the starting y-position of the robot for future in in the code (NEW)
   
+  originX = 0;
+  originY = 0;
+  finish_lineX = 528;
+  finish_lineY = 0;
+  
   pinMode (buttPin,INPUT_PULLUP); //reads 5V until button is pressed again, note: logic is inverted
   while(digitalRead(buttPin));
    
@@ -101,7 +111,7 @@ void setup() {
   startTime = millis(); 
   
   myServo.attach(ServoPin); // Attach the servo to pin ServoPin
-  myServo.write(minServoPosition);
+  myServo.write(minServoPosition); // I assume this is where you set the servo to all the way to the left, but wouldn't it make more sense to set this to 90?
   
   pinMode(SolenoidPin, OUTPUT);
 
