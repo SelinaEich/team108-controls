@@ -100,19 +100,23 @@ float K_phi;
 int startingBlock; // notes starting block position 0 or 1
 
 /*Start Button Variables*/
-int buttonState = 0;
+int buttonState;
 
 
 /******************************* setup *************************************/
 void setup() {
+  Serial.begin(9600);
   
-  /* whatever function that will essentially output the starting position should go here so that the variable declaration in the next two lines of code works correctly */
-  /* These comments can be undone and made usable to test the controller law
-   */ startingPosX = -99;
-  startingPosY = 154;
-   
+  pinMode(startPin,INPUT_PULLUP);
+  pinMode(PotPin, INPUT);
+  buttonState = digitalRead(startPin);
+  startingBlock = floor(analogRead(PotPin) / 129);
+  Serial.print("Button State:"); Serial.print("\t"); Serial.println(buttonState);
+  Serial.print("Starting Block:"); Serial.print("\t"); Serial.println(startingBlock);
+  start();
+  Serial.print("startingPosX:"); Serial.print("\t"); Serial.println(startingPosX);
+  Serial.print("startingPosY:"); Serial.print("\t"); Serial.println(startingPosY);
   
-
   K_alpha_p = 1.5;
   K_phi = 1;
   
@@ -125,12 +129,8 @@ void setup() {
   finish_lineY = 0;
 
     /* Initialize Serial and I2C communications */
-  Serial.begin(9600);
+  
   Wire.begin();
-
-  pinMode(startPin,INPUT_PULLUP);
-  buttonState = digitalRead(startPin);
-  Serial.print("buttonState:"); Serial.print("\t"); Serial.println(buttonState);
   
   pinMode (buttPin,INPUT_PULLUP); //reads 5V until button is pressed again, note: logic is inverted
   while(digitalRead(buttPin));
@@ -372,74 +372,88 @@ void steering(){
 
 /************** Potentiometer/Starting Position Base Code *************/
 void start() {
-  if (buttonState == HIGH){ 
-    startingBlock = floor(analogRead(PotPin) / 129); 
+  if (buttonState == 1){ 
     if (startingBlock == 0){ // Position A1
       startingPosX = -99;
       startingPosY = 154;
+      Serial.println("Position A1");
     }
     else if (startingBlock == 1){ // Position A2
       startingPosX = -121;
       startingPosY = 132;
+      Serial.println("Position A2");
     }
     else if (startingBlock == 2){ // Position A3
       startingPosX = -99;
       startingPosY = 110;
+      Serial.println("Position A3");
     }
     else if (startingBlock == 3){ // Position A4
       startingPosX = -77;
       startingPosY = 132;
+      Serial.println("Position A4");
     }
     else if (startingBlock == 4){ // Position B1
       startingPosX = -33;
       startingPosY = 154;
+      Serial.println("Position B1");
     }
     else if (startingBlock == 5){ // Position B2
       startingPosX = -55;
       startingPosY = 132;
+      Serial.println("Position B2");
     }
     else if (startingBlock == 6){ // Position B3
       startingPosX = -33;
       startingPosY = 110;
+      Serial.println("Position B3");
     }
     else if (startingBlock == 7){ // Position B4
       startingPosX = -11;
       startingPosY = 132;
+      Serial.println("Position B4");
     }
   }
-  else if (buttonState == LOW){
-    startingBlock = floor(analogRead(PotPin) / 129);
+  else if(buttonState == 0) {
     if (startingBlock == 0){ // Position C1
       startingPosX = -99;
       startingPosY = -110;
+      Serial.println("Position C1");
     }
     else if (startingBlock == 1){ // Position C2
       startingPosX = -121;
       startingPosY = -132;
+      Serial.println("Position C2");
     }
     else if (startingBlock == 2){ // Position C3
       startingPosX = -99;
       startingPosY = -154;
+      Serial.println("Position C3");
     }
     else if (startingBlock == 3){ // Position C4
       startingPosX = -77;
       startingPosY = -132;
+      Serial.println("Position C4");
     }
     else if (startingBlock == 4){ // Position D1
       startingPosX = -33;
       startingPosY = -110;
+      Serial.println("Position D1");
     }
     else if (startingBlock == 5){ // Position D2
       startingPosX = -55;
       startingPosY = -132;
+      Serial.println("Position D2");
     }
     else if (startingBlock == 6){ // Position D3
       startingPosX = -33;
       startingPosY = -154;
+      Serial.println("Position D3");
     }
     else if (startingBlock == 7){ // Position D4
       startingPosX = -11;
       startingPosY = -132;
+      Serial.println("Position D4");
     }
   }
   }
