@@ -187,6 +187,8 @@ void loop() {
   updateMag();
   updateSolenoid(); 
   updateServo();
+
+  Serial.print("Phi:"); Serial.print("\t"); Serial.println(phi);
 }
 
 /******************** update magnetometer function ************************/
@@ -212,10 +214,8 @@ void updateMag(void) {
     //Serial.print("Z:"); Serial.print("\t"); Serial.print(magZ); Serial.print("\t");*/
 
     /* Calculate magnetometer angle */
-  theta = 180. / pi * atan2(magY, magX) + thetaOffset; // convert to degrees, apply offset
-  theta = modulo(theta, 360.); // ensure that theta is between 0 and 360 degrees
-
-  Serial.print("theta:"); Serial.print("\t"); Serial.println(theta);
+  phi = 180. / pi * atan2(magY, magX) + thetaOffset; // convert to degrees, apply offset //changed theta to phi!?!
+  phi = modulo(phi, 360.); // ensure that theta is between 0 and 360 degrees //changed theta to phi!?!
 }
 
 /************************* Update Solenoid *********************************/
@@ -271,7 +271,7 @@ void updateServo() {
   }
 
   /* update servo position */
-  servoAngle = servoBearing - theta; //where you want robot to point - where it currently points = desired change in servo angle
+  servoAngle = servoBearing - phi; //where you want robot to point - where it currently points = desired change in servo angle?? I changed theta to phi...
   servoAngle = modulo(servoAngle, 360.); //make sure servoAngle is between 0 and 360 degrees,*/ 
   /* does mod absolute value of #s?/take negative numbers into account? NO! See below(?). */
   /*  float turn;
@@ -294,7 +294,7 @@ void updateServo() {
   myServo.write(servoAngle); // input can be between 0 and 180 degrees (note abovementioned changes)*/
   
  /*print for troubleshooting*/
-  // Serial.print("Theta:"); Serial.print("\t"); Serial.println(theta);
+  // Serial.print("Phi:"); Serial.print("\t"); Serial.println(phi); //AHH! changed theta to phi.
   // Serial.print("Servo Angle:"); Serial.print("\t"); Serial.println(servoAngle);
   //Serial.print("Servo Position:"); Serial.print("\t"); Serial.println(servoPosition);
   //Serial.print("Solenoid State:"); Serial.print("\t"); Serial.println(solenoidState);
@@ -332,9 +332,9 @@ float fix(float x) {
 }
 
 /************* Controller (TO BE CHECKED) **********************/
-void steering(){
+/*void steering(){
   if((currentPosY > -33) && (currentPosY < 33)) {// determines whether or not the robot is in the channel to run the channel control law
-  p_desiredX = currentPosX + target_lead;
+  p_desiredX = currentPosX + target_lead; 
   p_desiredY = 0;
   phi_desired = 0; 
   }// phi_desired was originally servoBearing; this variable refers to the desired orientation of the robot
@@ -358,11 +358,11 @@ void steering(){
 
   myServo.write(90+theta_target);
 }
-
+*/
 /************** Potentiometer/Starting Position Base Code *************/
-void start() {
-  if (/*Insert condition for button being ON referring to starting positions in the A Block and B Block*/){ 
-    startingBlock = analogRead(PotPin) / 513; 
+//void start() {
+//  if (/*Insert condition for button being ON referring to starting positions in the A Block and B Block*/){ 
+   /* startingBlock = analogRead(PotPin) / 513; 
     if (startingBlock == 0){ // Position A1
       startingPosX = -99;
       startingPosY = 154;
@@ -396,9 +396,9 @@ void start() {
       startingPosY = 132;
     }
   }
-  else if (/*Insert condition for button being OFF referring to starting positions on the C Block and D Block*/){
-    startingBlock = analogRead(PotPin) / 513;
-    if (startingBlock == 0){ // Position C1
+//  else if (/*Insert condition for button being OFF referring to starting*/
+//startingBlock = analogRead(PotPin) / 513;
+  /*  if (startingBlock == 0){ // Position C1
       startingPosX = -99;
       startingPosY = -110;
     }
@@ -431,7 +431,7 @@ void start() {
       startingPosY = -132;
     }
   }
-  }
+  }*/
 
 
   
