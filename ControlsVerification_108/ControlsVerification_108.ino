@@ -101,7 +101,7 @@ void setup() {
   
   originX = 0;
   originY = 0;
-  finish_lineX = 528;
+  finish_lineX = 530;
   finish_lineY = 0;
   
   pinMode (buttPin,INPUT_PULLUP); //reads 5V until button is pressed again, note: logic is inverted
