@@ -18,7 +18,8 @@ Servo myServo;                      // compass servo
 /*********************** Global variables go here ***************************/
 /* Magnetometer Variables*/
 int   magX, magY, magZ;             // triple axis data
-float theta;                        // magnetometer angle in PCB plane (around Z-axis) in degrees, Servo.write(theta) turns robot towards magnetic north, theta is the angle/direction that the robot is currently pointing
+float phi;                        // magnetometer angle in PCB plane (around Z-axis) in degrees, Servo.write(theta) turns robot towards magnetic north, theta is the angle/direction that the robot is currently pointing
+/* this variable phi used to be theta, I changed it to make the code less confusing for implementing the controller */
 float thetaOffset = -191;             // a value of -191 makes 0 degrees represent North, UPDATE THIS!!!!
 /*update thetaOffset*/
 
@@ -59,6 +60,7 @@ const float pi = 3.14159;
 float a = 5.5; // (in inches) distance between rear wheels
 float b = 5.5; // (in inches) distance between rear axle and front wheel 
 float backWheelRadius = 1.5748; // (in inches) roller blade back wheel radius
+float theta_max = 90; // maximum change in servo angle (relative to center)
 
 /*Position Variables*/
 float distanceX = 0; // (in inches) distance traveled in the x-direction
@@ -68,24 +70,28 @@ float currentPosX; // current x-position (NEW)
 float currentPosY; // current y-position (NEW)
 float startingPosX; // starting x-position (will vary depending on selected starting position) (NEW)
 float startingPosY; // starting y-position (will vary depending on selected starting position) (NEW)
-float posVect[1]; // vector position of robot (NEW)
 float originX; // x-position of origin, to be set at the center of the channel gate (NEW)
 float originY; // y-position of origin, to be set at the center of the channel gate (NEW)
 float finish_lineX; // x-position of finish line, to be set at the end of the channel (NEW)
 float finish_lineY; // y-position of finish line, to be set at the end of the channel (NEW)
 
+/*Desired and Target Variables*/
+float p_desiredX; // desired x-position
+float p_desiredY; // desired y-position
+float phi_desired; // desired orientation of robot
+float theta_target; // desired change in steering angle
+
 /*Error Variables*/
 
-float error_p[1]; // position error in vector form (NEW)
-float error_p_dist; // distance from current position to target position (NEW)
+float error_pX;// x-position error
+float error_pY; // y-position error
+float error_phi; // error between desired and current orientations
 float p_angle; // direction from robot to target (NEW)
 float alpha_p; // error between orientation (theta) and error angle (p_angle) (NEW)
-float unit_theta[1]; // unit vector representing orientation of robot (NEW)
-float p_lead[1]; // position vector of lead target (NEW)
-float lead_angle; // direction of lead target (NEW)
-float alpha_L; // error between orientation (theta) and lead_angle (NEW)
-float error_theta; // error between estimated and desired orientation (NEW)
-float error_speed; // error between estimated and desired speed (NEW)
+
+/*Control Gain Variables*/
+float K_alpha_p;
+float K_phi;
 
 /*Potentiometer Variables*/
 int startingBlock; // notes starting block position 0 or 1
@@ -96,6 +102,9 @@ void setup() {
 
    /* whatever function that will essentially output the starting position should go here so that the variable declaration in the next two lines of code works correctly */
 
+  K_alpha_p = 1.5;
+  K_phi = 1;
+  
   currentPosX = startingPosX; // initializes the starting x-position of the robot for future use in the code (NEW)
   currentPosY = startingPosY; // initializes the starting y-position of the robot for future in in the code (NEW)
   
@@ -288,8 +297,8 @@ void updateSolenoid(){
 /************************* position estimate/distance traveled update *************************************/
 void estimate(){
   /*assume deltaSw is >>1, therefore neglect curvature and use trig. to estimate x & y distances traveled*/
-  distanceX += cos(theta) * deltaSw; // updates distance traveled in x-direction since last reed trigger
-  distanceY += sin(theta) * deltaSw; // updates distance travled in y-direction since last reed trigger
+  distanceX += cos(phi) * deltaSw; // updates distance traveled in x-direction since last reed trigger
+  distanceY += sin(phi) * deltaSw; // updates distance travled in y-direction since last reed trigger
   distance += deltaSw; // update distance traveled since last reed trigger
   currentPosX += distanceX; // updates the new current x-position of the robot (NEW)
   currentPosY += distanceY; // updates the new current y-position of the robot (NEW)
@@ -300,7 +309,45 @@ void estimate(){
 }
 
 /************************* modulo for floats *******************************/
-float modulo(float dividend, float divisor) {
-  float quotient = floor(dividend/divisor); // find quotient rounded down
-  return dividend - divisor*quotient; // return the remainder of the divison
+float modulo(float x, float y) {
+  float n = floor(x/y); // find quotient rounded down
+  return x - n*y; // return the remainder of the divison
 }
+
+/********** signum function **********************/
+int sign(float x) {
+    return (x > 0) - (x < 0);
+}
+
+/**********fix angle function***************/
+float fix(float x) {
+  float n = modulo(x+pi,2*pi)-pi; // limits the input argument x to be between +/- pi (180 degrees)
+  return n*(180/pi); // converts the angle from radians to degrees
+}
+
+/************* Controller (TO BE CHECKED) **********************/
+void steering(){
+  if((currentPosY > -33) && (currentPosY < 33)) // determines whether or not the robot is in the channel to run the channel control law
+  p_desiredX = currentPosX + target_lead;
+  p_desiredY = 0;
+  phi_desired = 0; // phi_desired was originally servoBearing; this variable refers to the desired orientation of the robot
+  else // the statements following this else should have the robot continue to move forwards
+  p_desiredX = currentPosX;
+  p_desiredY = 0;
+  phi_desired = 90;
+  end
+
+  error_pX = currentPosX - p_desiredX;
+  error_pY = currentPosY - p_desiredY;
+
+  p_angle = fix(atan2(-1*error_pY,-1*error_pX));
+  alpha_p = fix(atan2(p_angle-phi)); 
+
+  error_phi = fix(phi_desired-phi); 
+
+  theta_target = K_alpha_p*alpha_p+K_phi*error_phi; // calculation of the desired change in steering angle
+  theta_target = sign(theta_target)*min(theta_max,abs(theta_target)); // limits the orientation of the SERVO within its limits (0-180 degrees)
+
+  myServo.write(90+theta_target);
+}
+
