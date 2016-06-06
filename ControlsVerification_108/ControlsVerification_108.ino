@@ -443,34 +443,3 @@ void start() {
     }
   }
   }
-
-
-/* #include <Servo.h>
-#include <Wire.h>
-#include <avr/sleep.h>
-
-#define address 0x1E  //0011110b, I2C 7bit address of HMC5883
-#define ServoPin 10
-#define SolenoidPin 9
-#define Reed 2 
-#define Switch 2
-#define deltaSw 2.4737 // (in inches per reed trigger) Circumference/#Magnets or 2*pi*wheelRaduis/numMagnets, MUST BE A DECIMAL NUMBER!
-#define PotPin A0
-#define buttPin 5 //Button to start executing code is in pin 5
-#define startPin 0 // Button to define starting positions
-
-Servo myServo;                      // compass servo
-
-int buttonState = 0;
-
-void setup() {
-  Serial.begin(9600);
-  pinMode(startPin,INPUT_PULLUP);
-
-}
-
-void loop() {
-  int buttonState = digitalRead(startPin);
-  Serial.println(buttonState);
-  delay(1);
-} */
