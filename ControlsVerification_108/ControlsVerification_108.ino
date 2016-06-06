@@ -10,6 +10,7 @@
 #define deltaSw 2.4737 // (in inches per reed trigger) Circumference/#Magnets or 2*pi*wheelRaduis/numMagnets, MUST BE A DECIMAL NUMBER!
 #define PotPin A0
 #define buttPin 5 //Button to start executing code is in pin 5
+#define startPin 0 // Button to define starting positions
 
 Servo myServo;                      // compass servo
 
@@ -89,7 +90,7 @@ float error_pY; // y-position error
 float error_p_distance; // magnitude of position error
 float error_phi; // error between desired and current orientations
 float p_angle; // direction from robot to target (NEW)
-float alpha_p; // error between orientation (theta) and error angle (p_angle) (NEW)
+float alpha_p; // error between orientation (theta) and error angle (p_angle)
 
 /*Control Gain Variables*/
 float K_alpha_p;
@@ -98,10 +99,17 @@ float K_phi;
 /*Potentiometer Variables*/
 int startingBlock; // notes starting block position 0 or 1
 
+/*Start Button Variables*/
+int buttonState = 0;
+
 
 /******************************* setup *************************************/
 void setup() {
 
+  pinMode(startPin,INPUT_PULLUP);
+  buttonState = digitalRead(startPin);
+  Serial.print("buttonState");
+  
   /* whatever function that will essentially output the starting position should go here so that the variable declaration in the next two lines of code works correctly */
   /* These comments can be undone and made usable to test the controller law
    */ startingPosX = -99;
@@ -327,8 +335,7 @@ int sign(float x) {
 
 /**********fix angle function***************/
 float fix(float x) {
-  float n = modulo(x+pi,2*pi)-pi; // limits the input argument x to be between +/- pi (180 degrees)
-  return n*(180/pi); // converts the angle from radians to degrees
+  return modulo(x+pi,2*pi)-pi; // limits the input argument x to be between +/- pi (180 degrees)
 }
 
 /************* Controller (TO BE CHECKED) **********************/
@@ -342,14 +349,14 @@ void steering(){
   else  {// the statements following this else should have the robot continue to move forwards
     p_desiredX = currentPosX;
     p_desiredY = 0;
-    phi_desired = -fix(atan2(currentPosY,0));
+    phi_desired = -fix(atan2(currentPosY,0))*(180/pi);
   }
 
   error_pX = currentPosX - p_desiredX; // calculates the x-position error between the current position and the desired position
   error_pY = currentPosY - p_desiredY; // calculates the y-position error between the current position and the desired position
-  error_p_distance = sqrt((error_pX)*(error_pX)+(error_pY)*(error_pY)); // calculates the magnitude of the error between the current position and the desired position
+  error_p_distance = sqrt(pow(error_pX,2)+pow(error_pY,2)); // calculates the magnitude of the error between the current position and the desired position
 
-  p_angle = fix(atan2(-1*error_pY,-1*error_pX));
+  p_angle = fix(atan2(-1*error_pY,-1*error_pX))*(180/pi);
   alpha_p = fix(p_angle-phi); 
 
   error_phi = fix(phi_desired-phi); 
@@ -362,8 +369,8 @@ void steering(){
 
 /************** Potentiometer/Starting Position Base Code *************/
 void start() {
-  if (/*Insert condition for button being ON referring to starting positions in the A Block and B Block*/){ 
-    startingBlock = analogRead(PotPin) / 513; 
+  if (buttonState == HIGH){ 
+    startingBlock = floor(analogRead(PotPin) / 129); 
     if (startingBlock == 0){ // Position A1
       startingPosX = -99;
       startingPosY = 154;
@@ -397,8 +404,8 @@ void start() {
       startingPosY = 132;
     }
   }
-  else if (/*Insert condition for button being OFF referring to starting positions on the C Block and D Block*/){
-    startingBlock = analogRead(PotPin) / 513;
+  else if (buttonState == LOW){
+    startingBlock = floor(analogRead(PotPin) / 129);
     if (startingBlock == 0){ // Position C1
       startingPosX = -99;
       startingPosY = -110;
