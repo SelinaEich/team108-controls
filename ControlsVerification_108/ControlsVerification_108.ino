@@ -4,7 +4,7 @@
 
 #define address 0x1E  //0011110b, I2C 7bit address of HMC5883
 #define ServoPin 10
-#define SolenoidPin 9
+#define SolenoidPin 6
 #define Reed 2 
 #define Switch 2
 #define deltaSw 2.4737 // (in inches per reed trigger) Circumference/#Magnets or 2*pi*wheelRaduis/numMagnets, MUST BE A DECIMAL NUMBER!
@@ -30,7 +30,7 @@ float servoAngle;                 // desired change in servo angle; should be ch
 /*Servo Variables*/
 int servoPosition = 1;
 unsigned long lastTimeServo;
-int servoInterval = 200; // (in milliseconds) sets time interval at which servo adjusts
+int servoInterval = 100; // (in milliseconds) sets time interval at which servo adjusts
 
 /*Servo Position Btwn 0 & 180*/
 int minServoPosition = 0;
@@ -206,13 +206,13 @@ void updateSolenoid(){
       solenoidState = LOW;
       digitalWrite(SolenoidPin, solenoidState); // Opens the solenoid valve
       lastTimeSolenoid = currentTime;
-      //Serial.println("SolenoidOff");
+      Serial.println("SolenoidOff");
     } 
     if ((currentTime - lastTimeSolenoid) >= solenoidInterval && solenoidState == LOW) {
       solenoidState = HIGH; 
       digitalWrite(SolenoidPin, solenoidState); // Closes the solenoid valve
       lastTimeSolenoid = currentTime;
-      //Serial.println("SolenoidOn");
+      Serial.println("SolenoidOn");
     }
     //Serial.println("Solenoid");
     //Serial.print("solenoidInterval:"); Serial.print("\t"); Serial.println(solenoidInterval);
