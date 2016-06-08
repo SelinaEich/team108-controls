@@ -21,7 +21,7 @@ Servo myServo;                      // compass servo
 int   magX, magY, magZ;             // triple axis data
 float phi;                        // magnetometer angle in PCB plane (around Z-axis) in degrees, Servo.write(theta) turns robot towards magnetic north, theta is the angle/direction that the robot is currently pointing
 /* this variable phi used to be theta, I changed it to make the code less confusing for implementing the controller */
-float thetaOffset = -139;             // a value of -191 makes 0 degrees represent North, UPDATE THIS!!!!
+float thetaOffset = -201;             // a value of -139 makes 0 degrees represent down the channel
 /*update thetaOffset*/
 
 float servoBearing;          // originally as servoBearing; has been changed to phi_desired to represent the desired ORIENTATION of the robot
@@ -117,8 +117,8 @@ void setup() {
   Serial.print("startingPosX:"); Serial.print("\t"); Serial.println(startingPosX);
   Serial.print("startingPosY:"); Serial.print("\t"); Serial.println(startingPosY);
   
-  K_alpha_p = 1.5;
-  K_phi = 1;
+  K_alpha_p = 1;
+  K_phi = 0;
   
   currentPosX = startingPosX; // initializes the starting x-position of the robot for future use in the code (NEW)
   currentPosY = startingPosY; // initializes the starting y-position of the robot for future in in the code (NEW)
@@ -134,13 +134,13 @@ void setup() {
   
   pinMode (buttPin,INPUT_PULLUP); //reads 5V until button is pressed again, note: logic is inverted
   while(digitalRead(buttPin));
+  myServo.attach(ServoPin); // Attach the servo to pin ServoPin
+  myServo.write(90); // I assume this is where you set the servo to all the way to the left, but wouldn't it make more sense to set this to 90?
    
   delay(5000); // Delay the code 15 seconds (15000 ms)
   startTime = millis(); 
   
-  myServo.attach(ServoPin); // Attach the servo to pin ServoPin
-  myServo.write(minServoPosition); // I assume this is where you set the servo to all the way to the left, but wouldn't it make more sense to set this to 90?
-  
+ 
   pinMode(SolenoidPin, OUTPUT);
 
 
@@ -164,9 +164,10 @@ void estimate(){
   currentPosX += distanceX; // updates the new current x-position of the robot (NEW)
   currentPosY += distanceY; // updates the new current y-position of the robot (NEW)
   
-  
   float distanceCM = (distance * 2.54); //convert distance traveled from inches to cm
   //Serial.print("Distance Traveled (in cm):"); Serial.print("\t"); Serial.println(distanceCM);
+  Serial.print("currentPosX:");Serial.print("\t");Serial.println(currentPosX);
+  Serial.print("currentPosY:");Serial.print("\t");Serial.println(currentPosY);
 }
 /************************* modulo for floats *******************************/
 float modulo(float x, float y) {
@@ -198,6 +199,9 @@ void updateMag(void) {
     /* Calculate magnetometer angle */
   phi = 180. / pi * atan2(magY, magX) + thetaOffset; // convert to degrees, apply offset
   phi = modulo(phi, 360.); // ensure that theta is between 0 and 360 degrees
+
+  // Serial.print("phi"); Serial.print("\t"); Serial.print(phi); Serial.println("\t");
+  // Serial.print("servo angle:"); Serial.print("\t"); Serial.println(theta_target);
 }
 
 /************************* Update Solenoid *********************************/
@@ -258,13 +262,14 @@ void loop() {
   Serial.print("startTime:"); Serial.print("\t"); Serial.println(startTime);
   Serial.print("currentTime - startTime:"); Serial.print("\t"); Serial.println(currentTime - startTime);*/
   
-  if (currentTime - startTime >= 59000){ //Stop actuating 59 seconds after the code starts running (after delay)
+  if (currentTime - startTime >= 119000){ //Stop actuating 59 seconds after the code starts running (after delay)
     cli();
     sleep_enable();
     sleep_cpu();
   }
      
   /* Update the sensor readings and solenoid state */
+  steering();
   updateMag();
   updateSolenoid(); 
   
@@ -338,7 +343,7 @@ int sign(float x) {
 
 /**********fix angle function***************/
 float fix(float x) {
-  return modulo(x+pi,2*pi)-pi; // limits the input argument x to be between +/- pi (180 degrees)
+  return modulo(x+180,360)-180; // limits the input argument x to be between +/- pi (180 degrees)
 }
 
 /************* Controller (TO BE CHECKED) **********************/
@@ -350,24 +355,31 @@ void steering(){
   }
   // phi_desired was originally servoBearing; this variable refers to the desired orientation of the robot
   else  {// the statements following this else should have the robot continue to move forwards
-    p_desiredX = currentPosX;
+    p_desiredX = startingPosX;
     p_desiredY = 0;
-    phi_desired = -fix(atan2(currentPosY,0))*(180/pi);
+    phi_desired = -modulo(atan2(currentPosY,0)*(180/pi),360);
   }
 
   error_pX = currentPosX - p_desiredX; // calculates the x-position error between the current position and the desired position
   error_pY = currentPosY - p_desiredY; // calculates the y-position error between the current position and the desired position
   error_p_distance = sqrt(pow(error_pX,2)+pow(error_pY,2)); // calculates the magnitude of the error between the current position and the desired position
 
-  p_angle = fix(atan2(-1*error_pY,-1*error_pX))*(180/pi);
-  alpha_p = fix(p_angle-phi); 
+  p_angle = modulo(atan2(-1*error_pY,-1*error_pX)*(180/pi),360); // calculates the angle formed by the position error vector and the horizontal axis then converts to degrees
+  alpha_p = fix(p_angle-phi); // calculates the error formed by the orientation of the robot and the desired position vector
 
-  error_phi = fix(phi_desired-phi); 
+  error_phi = modulo(phi_desired-phi,360); 
 
   theta_target = K_alpha_p*alpha_p+K_phi*error_phi; // calculation of the desired change in steering angle
-  theta_target = sign(theta_target)*min(theta_max,abs(theta_target)); // limits the orientation of the SERVO within its limits (0-180 degrees)
-
-  myServo.write(90+theta_target);
+ // theta_target = sign(theta_target)*min(theta_max,abs(theta_target)); // limits the orientation of the SERVO within its limits (0-180 degrees)
+  theta_target = -1*theta_target;
+  float servoAngle = 90+theta_target;
+  if (servoAngle > 270 || servoAngle < 60){
+    servoAngle = 60;
+  }
+  else if (servoAngle > 120){
+    servoAngle = 120;
+  }
+  myServo.write(servoAngle);
 }
 
 /************** Potentiometer/Starting Position Base Code *************/
