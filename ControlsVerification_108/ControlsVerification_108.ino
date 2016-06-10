@@ -4,10 +4,10 @@
 
 #define address 0x1E  //0011110b, I2C 7bit address of HMC5883
 #define ServoPin 10
-#define SolenoidPin 6
+#define SolenoidPin 3
 #define Reed 2 
 #define Switch 2
-#define deltaSw 2.4737 // (in inches per reed trigger) Circumference/#Magnets or 2*pi*wheelRaduis/numMagnets, MUST BE A DECIMAL NUMBER!
+#define deltaSw 2.4737 // (in inches per reed trigger) Circumference/#Magnets or 2*pi*wheelRadius/numMagnets, MUST BE A DECIMAL NUMBER!
 #define PotPin A0
 #define buttPin 5 //Button to start executing code is in pin 5
 #define startPin 0 // Button to define starting positions
@@ -21,7 +21,7 @@ Servo myServo;                      // compass servo
 int   magX, magY, magZ;             // triple axis data
 float phi;                        // magnetometer angle in PCB plane (around Z-axis) in degrees, Servo.write(theta) turns robot towards magnetic north, theta is the angle/direction that the robot is currently pointing
 /* this variable phi used to be theta, I changed it to make the code less confusing for implementing the controller */
-float thetaOffset = -201;             // a value of -139 makes 0 degrees represent down the channel
+float thetaOffset = -117;             // a value of -117 makes 0 degrees represent down the channel
 /*update thetaOffset*/
 
 float servoBearing;          // originally as servoBearing; has been changed to phi_desired to represent the desired ORIENTATION of the robot
@@ -40,7 +40,7 @@ int maxServoPosition = 180;
 int solenoidState = 0; // zero is closed (valve)
 unsigned long lastTimeSolenoid;
 //time
-int solenoidInterval = 500; // (in milliseconds) sets time interval at which solenoid fires
+int solenoidInterval = 200; // (in milliseconds) sets time interval at which solenoid fires
 
 unsigned long startTime;
 unsigned long currentTime;
@@ -97,7 +97,7 @@ float K_alpha_p;
 float K_phi;
 
 /*Potentiometer Variables*/
-int startingBlock; // notes starting block position 0 or 1
+int startingBlock; // notes starting block position (16 possibilities)
 
 /*Start Button Variables*/
 int buttonState;
@@ -117,7 +117,7 @@ void setup() {
   Serial.print("startingPosX:"); Serial.print("\t"); Serial.println(startingPosX);
   Serial.print("startingPosY:"); Serial.print("\t"); Serial.println(startingPosY);
   
-  K_alpha_p = 1;
+  K_alpha_p = 1; //Pat had this set to 1
   K_phi = 0;
   
   currentPosX = startingPosX; // initializes the starting x-position of the robot for future use in the code (NEW)
@@ -135,7 +135,13 @@ void setup() {
   pinMode (buttPin,INPUT_PULLUP); //reads 5V until button is pressed again, note: logic is inverted
   while(digitalRead(buttPin));
   myServo.attach(ServoPin); // Attach the servo to pin ServoPin
-  myServo.write(90); // I assume this is where you set the servo to all the way to the left, but wouldn't it make more sense to set this to 90?
+  myServo.write(90); // I assume this is where you set the servo to 90
+
+
+
+
+
+  
    
   delay(5000); // Delay the code 15 seconds (15000 ms)
   startTime = millis(); 
@@ -200,7 +206,7 @@ void updateMag(void) {
   phi = 180. / pi * atan2(magY, magX) + thetaOffset; // convert to degrees, apply offset
   phi = modulo(phi, 360.); // ensure that theta is between 0 and 360 degrees
 
-  // Serial.print("phi"); Serial.print("\t"); Serial.print(phi); Serial.println("\t");
+   Serial.print("phi"); Serial.print("\t"); Serial.print(phi); Serial.println("\t");
   // Serial.print("servo angle:"); Serial.print("\t"); Serial.println(theta_target);
 }
 
@@ -210,13 +216,13 @@ void updateSolenoid(){
       solenoidState = LOW;
       digitalWrite(SolenoidPin, solenoidState); // Opens the solenoid valve
       lastTimeSolenoid = currentTime;
-      Serial.println("SolenoidOff");
+      //Serial.println("SolenoidOff");
     } 
     if ((currentTime - lastTimeSolenoid) >= solenoidInterval && solenoidState == LOW) {
       solenoidState = HIGH; 
       digitalWrite(SolenoidPin, solenoidState); // Closes the solenoid valve
       lastTimeSolenoid = currentTime;
-      Serial.println("SolenoidOn");
+      //Serial.println("SolenoidOn");
     }
     //Serial.println("Solenoid");
     //Serial.print("solenoidInterval:"); Serial.print("\t"); Serial.println(solenoidInterval);
@@ -262,7 +268,7 @@ void loop() {
   Serial.print("startTime:"); Serial.print("\t"); Serial.println(startTime);
   Serial.print("currentTime - startTime:"); Serial.print("\t"); Serial.println(currentTime - startTime);*/
   
-  if (currentTime - startTime >= 119000){ //Stop actuating 59 seconds after the code starts running (after delay)
+  if (currentTime - startTime >= 59000){ //Stop actuating 59 seconds after the code starts running (after delay)
     cli();
     sleep_enable();
     sleep_cpu();
@@ -372,7 +378,7 @@ void steering(){
   theta_target = K_alpha_p*alpha_p+K_phi*error_phi; // calculation of the desired change in steering angle
  // theta_target = sign(theta_target)*min(theta_max,abs(theta_target)); // limits the orientation of the SERVO within its limits (0-180 degrees)
   theta_target = -1*theta_target;
-  float servoAngle = 90+theta_target;
+  float servoAngle = 90 - theta_target; //Subtraction instead of addition to account for our servo being upside down
   if (servoAngle > 270 || servoAngle < 60){
     servoAngle = 60;
   }
